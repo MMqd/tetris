@@ -12,7 +12,6 @@ using namespace std;
 bool draw=true;
 
 string DrawBuffer="";
-char Getch;
 char Color[10][20];
 char ColorBuffer[10][20];
 bool Ts[5][4][4]=
@@ -61,6 +60,7 @@ int CORY=0;
 int HighScore=0;
 string After="";
 string Before="";
+char g[3]{0};
 
 struct termios old;
 
@@ -90,9 +90,8 @@ void NewT(){
 
 void Input(){
 	while(true){
-		//Getch
-		Getch=getchar();
-		//Getch
+		read(0,&g,3);
+		if(g[0]==27 && g[1]=='[' && 64<g[2] && g[2]<69){g[0]=g[2]-48;}
 	}
 }
 
@@ -163,13 +162,11 @@ int main(int argc, const char* argv[]){
 		if(argc>2){cout<<"Too many arguments"<<endl;return 0;
 		} else if(argv[1]=="-h" || argv[1]=="--help"){
 			cout<<
-				"Simple Tetris Game\n"
-				"  Controls:\n"
-				"    n - Move left\n"
-				"    e - Move down\n"
-				"    o - Move right\n"
-				"    p,ESC - Pause/Unpause\n"
-				"    SPACE - Unpause/Restart game after game over"<<endl;
+			"Simple Tetris Game\n"
+			"  Controls:\n"
+			"    h/j/l, Arrow Left/Down/Right, n/e/o - Move left/down/right\n"
+			"    p,ESC - Pause/Unpause\n"
+			"    SPACE - Unpause/Restart game after game over"<<endl;
 			return 0;
 		} else if(argc!=1){cout<<"Unknown argument: "+string(argv[1])<<endl;return 0;
 		}
@@ -209,62 +206,62 @@ int main(int argc, const char* argv[]){
 	thread(Input).detach();
 	system("clear");
 	while(true){
-		if(Getch=='\e' | Getch=='p'){Pause=!Pause;draw=true;}
+		if(g[0]=='\e' | g[0]=='p'){Pause=!Pause;draw=true;}
 
 		if(!GameOver && !Pause){
 			if(fall){
 				if(CheckCollision(X,Y+1)){
-					S=true; NT=true;
+					S=true;NT=true;
 				} else {Y++;}
 				draw=true;
 				fall=false;
 			}
-			switch(Getch){//Input
-				case 'n':if(!CheckCollision(X-1,Y)){X--;draw=true;}break;
-				case 'e':
-					if(CheckCollision(X,Y+1)){
-						S=true;
-						NT=true;
-						draw=true;
-					} else {Y++;draw=true;}
-					break;
-				case 'i':
-					if(TID!=2){
-						int cX=CORX;
-						int cY=CORY;
-						int x=X;
-						int y=Y;
-						bool TmpT[4][4];
-						bool Safe=true;
-						cX=3-CORY; x-=cX-CORX;
-						cY=CORX; y-=cY-CORY;
-						for(int i=0; i<4; i++){
-							for(int j=0; j<4; j++){
-								int jx=j+x;
-								int iy=i+y;
-								TmpT[j][i]=CurrentT[i][3-j];
 
-								if(TmpT[j][i] && (jx>9 | jx<0 | iy>19 | iy<0 | Color[jx][iy]!=0)){Safe=false;}
-							}
-						}
-						if(Safe){
-							for(int i=0; i<4; i++){
-								for(int j=0; j<4; j++){CurrentT[i][j]=TmpT[i][j];}
-							}
-							CORX=cX;CORY=cY;X=x;Y=y;
-							draw=true;
+			if(g[0]=='h' || g[0]=='n' || g[0]==20){//Input
+				if(!CheckCollision(X-1,Y)){X--;draw=true;}
+			} else if(g[0]=='j' || g[0]=='e' || g[0]==18){
+				if(CheckCollision(X,Y+1)){
+					S=true;
+					NT=true;
+					draw=true;
+				} else {Y++;draw=true;}
+			} else if(g[0]=='k' || g[0]=='i' || g[0]==17){
+				if(TID!=2){
+					int cX=CORX;
+					int cY=CORY;
+					int x=X;
+					int y=Y;
+					bool TmpT[4][4];
+					bool Safe=true;
+					cX=3-CORY; x-=cX-CORX;
+					cY=CORX; y-=cY-CORY;
+					for(int i=0; i<4; i++){
+						for(int j=0; j<4; j++){
+							int jx=j+x;
+							int iy=i+y;
+							TmpT[j][i]=CurrentT[i][3-j];
+
+							if(TmpT[j][i] && (jx>9 || jx<0 || iy>19 || iy<0 | Color[jx][iy]!=0)){Safe=false;}
 						}
 					}
-					break;
-				case 'o':if(!CheckCollision(X+1,Y)){X++;draw=true;}break;
-				/*case '$':for(int x=X;x<10;x++){if(CheckCollision(x,Y)){X=x-1;break;}}draw=true;break;
-				case '^':for(int x=X;x>-2;x--){if(CheckCollision(x,Y)){X=x+1;break;}}draw=true;break;*/
-				case ' ':for(int y=Y+1;y<21;y++){if(CheckCollision(X,y)){Y=y-1;break;}}S=true;NT=true;draw=true;break;
-
+					if(Safe){
+						for(int i=0; i<4; i++){
+							for(int j=0; j<4; j++){CurrentT[i][j]=TmpT[i][j];}
+						}
+						CORX=cX;CORY=cY;X=x;Y=y;
+						draw=true;
+					}
+				}
+			} else if(g[0]=='l' || g[0]=='o' || g[0]==19){
+				if(!CheckCollision(X+1,Y)){X++;draw=true;}
+			} else if(g[0]==' '){
+				for(int y=Y+1;y<21;y++){if(CheckCollision(X,y)){Y=y-1;break;}}S=true;NT=true;draw=true;
+			//} else if(g[0]=='$'){for(int x=X;x<10;x++){if(CheckCollision(x,Y)){X=x-1;break;}}draw=true;
+			//} else if(g[0]=='^'){for(int x=X;x>-2;x--){if(CheckCollision(x,Y)){X=x+1;break;}}draw=true;
 			}//Input
 
 			if(S){
-				//GameOver=(Y-CORY<1);// && (X-CORX==3) | (Y-CORY<1);
+				//GameOver=(Y-CORY<1);// && (X-CORX==3) || (Y-CORY<1);
 				Solidify();
 				for(int x=0;x<10;x++){
 					if(Color[x][0]!=0){
@@ -283,7 +280,7 @@ int main(int argc, const char* argv[]){
 			if(NT && !GameOver){NewT();}
 
 		} else if(!Pause){//Game over
-			if(Getch==' '){//Input
+			if(g[0]==' '){//Input
 				X=3;Y=0;
 				for(int i=0; i<20; i++){
 					for(int j=0; j<10; j++){Color[j][i]=0;}
@@ -300,11 +297,11 @@ int main(int argc, const char* argv[]){
 						NextT[i][j]=Ts[NextTID][j][i];
 					}
 				}
-				draw=true;S=false;GameOver=false;
+				S=false;GameOver=false;
 			}//Input
 		}
-		if(Getch==' '){Pause=false;draw=true;}
-		if(Getch){Getch=0;}
+		if(g[0]==' '){Pause=false;draw=true;}
+		if(g[0]!=0){g[0]=0;}
 
 		if(draw){//Draw
 			for(int j=0; j<10; j++){
