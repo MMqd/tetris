@@ -318,7 +318,7 @@ int main(int argc, const char* argv[]){
 				}
 			}
 
-			DrawBuffer="\e[?25l"+After+Before+"┌────────────────────┬────────────┐\n";
+			DrawBuffer="\e[1H\e[?25l"+After+Before+"┌────────────────────┬────────────┐\n";
 			for(int i=0; i<20; i++){
 				DrawBuffer+=Before+"\e[0m│";
 				if(GameOver | Pause){
