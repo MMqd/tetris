@@ -7,7 +7,7 @@ It contains code examples on how to:
 * overwrite the screen without flicker
 * receive input
 * interpret arrow keys
-* handle resizing
+* handle resizing and termination
 * get the user's path
 * pass flags to the program
 
