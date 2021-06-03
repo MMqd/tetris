@@ -370,6 +370,7 @@ int main(int argc, const char* argv[]){
 				}
 			}
 
+			//The \e[1H ovewrites the screen, and returns the cursor to the first row. This "clears" the screen without flicker
 			DrawBuffer="\e[1H\e[?25l"+After+Before+"┌────────────────────┬────────────┐\n";
 			for(int i=0; i<20; i++){
 				DrawBuffer+=Before+"\e[0m│";
