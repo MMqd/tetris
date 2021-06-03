@@ -1,11 +1,40 @@
+/*
+	This is a simple tetris game, and an example project of how to do basic terminal tasks on linux, without ncurses.
+	Copyright (C) 2021  MMqd
+	 
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License along
+	with this program; if not, write to the Free Software Foundation, Inc.,
+	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 #include <iostream>
 #include <string>
+#include <fstream>
+
+//Used to detect when the program is terminated or when the terminal is resized
+#include <signal.h>
+
+//Used to get input without delay, will be possibly replaced by a delay-less get input command, if I find one
+#include <thread>
+
+//Used for getting user input
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <fstream>
-#include <thread>
-#include <signal.h>
+
+//Used for getting user's home directory
+#include <sys/types.h>
+#include <pwd.h>
 
 using namespace std;
 
@@ -14,33 +43,37 @@ bool draw=true;
 string DrawBuffer="";
 char Color[10][20];
 char ColorBuffer[10][20];
-bool Ts[5][4][4]=
+
+bool Ts[5][4][4]=	//Tetromino shapes (you can search for 1 to easily highlight the tetrominos)
 		{{{1, 1, 1, 1},
-		 {0, 0, 0, 0},
-		 {0, 0, 0, 0},
-		 {0, 0, 0, 0}},
+		  {0, 0, 0, 0},
+		  {0, 0, 0, 0},
+		  {0, 0, 0, 0}},
 
-		{{1, 1, 1, 0},
-		 {1, 0, 0, 0},
-		 {0, 0, 0, 0},
-		 {0, 0, 0, 0}},
+		 {{1, 1, 1, 0},
+		  {1, 0, 0, 0},
+		  {0, 0, 0, 0},
+		  {0, 0, 0, 0}},
 
-		{{1, 1, 0, 0},
-		 {1, 1, 0, 0},
-		 {0, 0, 0, 0},
-		 {0, 0, 0, 0}},
+		 {{1, 1, 0, 0},
+		  {1, 1, 0, 0},
+		  {0, 0, 0, 0},
+		  {0, 0, 0, 0}},
 
-		{{0, 1, 0, 0},
-		 {1, 1, 1, 0},
-		 {0, 0, 0, 0},
-		 {0, 0, 0, 0}},
+		 {{0, 1, 0, 0},
+		  {1, 1, 1, 0},
+		  {0, 0, 0, 0},
+		  {0, 0, 0, 0}},
 
-		{{1, 1, 0, 0},
-		 {0, 1, 1, 0},
-		 {0, 0, 0, 0},
-		 {0, 0, 0, 0}}};
+		 {{1, 1, 0, 0},
+		  {0, 1, 1, 0},
+		  {0, 0, 0, 0},
+		  {0, 0, 0, 0}}};
+
+//An array of tetromino centers of rotation
 bool CsORX[5]={1,1,0,1,1};
 bool CsORY[5]={0,0,0,1,1};
+
 int X=3;
 int Y=0;
 bool CurrentT[4][4];
@@ -50,18 +83,26 @@ char NextColor=1;
 int TID=0;
 int NextTID=0;
 int Score=0;
-bool NT=true;
-bool S=false;
+bool NT=true;	//New tetromino
+bool S=false;	//Solidify
 bool GameOver=false;
 bool fall=false;
 bool Pause=false;
+
+//Current center of rotation
 int CORX=0;
 int CORY=0;
+
 int HighScore=0;
 string After="";
 string Before="";
-char g[3]{0};
 
+char g[3]{0};	//This array stores input sequences, g[0] stores the character pressed
+
+//Gets the user's local directory to store highscore
+const string HighscoreFile=string(getpwuid(getuid())->pw_dir)+"/.local/share/Tetris Highscore";
+
+//Stores the initial state of the terminal, which is reverted to when the program is closed
 struct termios old;
 
 void NewT(){
@@ -92,6 +133,12 @@ void Input(){
 	while(true){
 		read(0,&g,3);
 		if(g[0]==27 && g[1]=='[' && 64<g[2] && g[2]<69){g[0]=g[2]-48;}
+		//Detects an arrow escape sequence ex: "^[[A" which is up
+		//A - up
+		//B - down
+		//C - left
+		//D - right
+		//The letters can be viewed by pressing Shift and the desired arrow key
 	}
 }
 
@@ -142,7 +189,8 @@ void Fall(){
 	}
 }
 
-void resizeHandler(int sig){
+void resizeHandler(int sig){//Resize
+	system("clear");
 	struct winsize w;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	After=string((w.ws_row-22)/2,'\n');
@@ -150,13 +198,16 @@ void resizeHandler(int sig){
 	draw=true;
 }
 
-void signalHandler(int signum) {
+void signalHandler(int signum){//Runs when ctrl-C is pressed and returns terminal to normal state when the game is closed
 	tcsetattr(0, TCSANOW, &old);
 	system("clear");
 	cout<<"\e[?25h"<<flush;
 	exit(signum);  
 }
 
+
+//argc is the size of the argv array
+//argv contains each argument, with the 0 being the program name or ./NAME if you are executing it with ./
 int main(int argc, const char* argv[]){
 	if(argc!=1){
 		if(argc>2){cout<<"Too many arguments"<<endl;return 0;
@@ -168,17 +219,19 @@ int main(int argc, const char* argv[]){
 			"    p,ESC - Pause/Unpause\n"
 			"    SPACE - Unpause/Restart game after game over"<<endl;
 			return 0;
-		} else if(argc!=1){cout<<"Unknown argument: "+string(argv[1])<<endl;return 0;
-		}
+		} else if(argc!=1){cout<<"Unknown argument: "+string(argv[1])<<endl;return 0;}
 	}
 	srand(time(0));
 
-	ifstream Tmp("HighScore");
+	ifstream Tmp(HighscoreFile);
 	Tmp>>HighScore;
 	Tmp.close();
 
+	//Signals need to be initialized
 	signal(SIGWINCH,resizeHandler);
 	signal(SIGINT,signalHandler);
+
+	//Gets the terminal size for the first time
 	resizeHandler(SIGWINCH);
 
 	NextColor=rand()%7+1;
@@ -194,8 +247,8 @@ int main(int argc, const char* argv[]){
 		}
 	}
 
+	//Used for getting input from terimal without echo, replaces ncurses
 	struct termios current;
-
 	tcgetattr(0, &old); /* grab old terminal i/o settings */
 	current = old; /* make new settings same as old settings */
 	current.c_lflag &= ~ICANON; /* disable buffered i/o */
@@ -256,7 +309,7 @@ int main(int argc, const char* argv[]){
 				if(!CheckCollision(X+1,Y)){X++;draw=true;}
 			} else if(g[0]==' '){
 				for(int y=Y+1;y<21;y++){if(CheckCollision(X,y)){Y=y-1;break;}}S=true;NT=true;draw=true;
-			//} else if(g[0]=='$'){for(int x=X;x<10;x++){if(CheckCollision(x,Y)){X=x-1;break;}}draw=true;
+			//} else if(g[0]=='$'){for(int x=X;x<10;x++){if(CheckCollision(x,Y)){X=x-1;break;}}draw=true;	//Experimentation with vim-like commands
 			//} else if(g[0]=='^'){for(int x=X;x>-2;x--){if(CheckCollision(x,Y)){X=x+1;break;}}draw=true;
 			}//Input
 
@@ -266,18 +319,20 @@ int main(int argc, const char* argv[]){
 				for(int x=0;x<10;x++){
 					if(Color[x][0]!=0){
 						GameOver=true;
-						if(Score>HighScore){
-							ofstream Tmp("HighScore");
-							HighScore=Score;
-							Tmp<<HighScore;
-							Tmp.close();
-						}
-						Score=0;
 						break;
 					}
 				}
 			}
 			if(NT && !GameOver){NewT();}
+			if(GameOver){
+				if(Score>HighScore){
+					ofstream Tmp(HighscoreFile);
+					HighScore=Score;
+					Tmp<<HighScore;
+					Tmp.close();
+				}
+				Score=0;
+			}
 
 		} else if(!Pause){//Game over
 			if(g[0]==' '){//Input
@@ -318,7 +373,7 @@ int main(int argc, const char* argv[]){
 			DrawBuffer="\e[1H\e[?25l"+After+Before+"┌────────────────────┬────────────┐\n";
 			for(int i=0; i<20; i++){
 				DrawBuffer+=Before+"\e[0m│";
-				if(GameOver | Pause){
+				if(GameOver || Pause){
 					switch(i){
 						case 9:DrawBuffer+="\e[40;37m▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄";break;
 						case 10:
