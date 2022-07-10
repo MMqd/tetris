@@ -1,7 +1,7 @@
 # Introduction
 A simple terminal Tetris game, with a look inspired by bastet.
 
-This was my first terminal program on linux. I found many basic tasks difficult while working on it. Over time I learned how to preform these basic tasks, and I hope this game/demo project will come in handy. Also, it serves as a reference on how to interact with the terminal without **ncurses**.
+This was my first terminal program on linux. I found many basic terminal tasks difficult while working on it, and compiled this basic game/demo to show how to interact with the terminal on linux. It also serves as a reference on how to interact with the terminal without **ncurses**.
 
 It contains code examples on how to:
 * overwrite the screen without flicker
@@ -11,4 +11,4 @@ It contains code examples on how to:
 * get the user's path
 * pass flags to the program
 
-**Note:** that it is overwriting the screen and not clearing, to clear a character instead of ovewriting it needs to be overwritten with a space.
+**Note:** that the screen is overwritten and not cleared, to clear a character instead of ovewriting the character needs to be overwritten with a space.
