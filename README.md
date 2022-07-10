@@ -11,4 +11,4 @@ It contains code examples on how to:
 * get the user's path
 * pass flags to the program
 
-Note that it is overwriting the screen and not clearing, to clear a character instead of ovewriting it needs to be overwritten with a space.
+**Note:** that it is overwriting the screen and not clearing, to clear a character instead of ovewriting it needs to be overwritten with a space.
