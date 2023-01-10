@@ -16,7 +16,7 @@ It contains examples of how to:
 * get the user's path
 * pass flags to the program
 
-**Note:** that the screen is overwritten and not cleared, to clear a character instead of ovewriting the character needs to be overwritten with a space.
+**Note:** that the screen is overwritten and not cleared, to clear a character it is necessary to overwrite it with a space.
 
 ## Controls
 * h/j/l, Arrow Left/Down/Right, or n/e/o - Move left/down/right
