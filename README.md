@@ -1,8 +1,8 @@
 # Tetris
 
-<div style="text-align:center">
+<p align="center">
    <img src="https://github.com/MMqd/tetris/blob/main/screenshot.png?raw=true" width="50%" alt="center image" />
-</div>
+</p>
 
 A simple linux terminal Tetris game, with a look inspired by bastet.
 
