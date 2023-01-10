@@ -1,6 +1,6 @@
 # Tetris
 
-<img src="https://github.com/MMqd/tetris/edit/main/screenshot.png" width="50%" />
+<img src="https://github.com/MMqd/tetris/edit/main/screenshot.png" width="50" />
 #![gameplay of terminal tetris game](screenshot.png)
 
 A simple linux terminal Tetris game, with a look inspired by bastet.
