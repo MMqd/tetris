@@ -1,6 +1,5 @@
 /*
-	"tetris" is a simple tetris game, and an example of handling basic terminal input/output on linux, without ncurses.
-    <one line to give the program's name and a brief idea of what it does.>
+    "tetris" is a simple tetris game, and an example of handling basic terminal input/output on linux, without ncurses.
     Copyright (C) 2021  MMqd
 
     This program is free software: you can redistribute it and/or modify
